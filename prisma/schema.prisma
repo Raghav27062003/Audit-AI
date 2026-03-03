@@ -1,0 +1,453 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./audit-ai.db"
+}
+
+// ===================== CORE AUDIT TABLES =====================
+
+model Audit {
+  id              Int       @id @default(autoincrement())
+  title           String
+  description     String?
+  systemName      String?
+  systemType      String?
+  organization    String?
+  industry        String?
+  regions         String?   // JSON array
+  status          String    @default("draft") // draft, in_progress, review, completed, archived
+  overallScore    Float?
+  riskLevel       String?   // critical, high, medium, low
+  auditor         String?
+  startDate       DateTime?
+  completionDate  DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  findings        Finding[]
+  checklists      ChecklistItem[]
+  complianceChecks ComplianceCheck[]
+  remediations    Remediation[]
+  aiAnalysisResults AiAnalysisResult[]
+  redTeamTests    RedTeamTest[]
+  monitoringAlerts MonitoringAlert[]
+  regulationImpacts RegulationImpact[]
+  incidents       Incident[]
+  comments        Comment[]
+  approvalWorkflows ApprovalWorkflow[]
+}
+
+model Finding {
+  id          Int      @id @default(autoincrement())
+  auditId     Int
+  title       String
+  description String
+  category    String   // bias, fairness, transparency, safety, privacy, security, performance, reliability
+  severity    String   // critical, high, medium, low
+  status      String   @default("open") // open, in_progress, resolved, accepted, dismissed
+  evidence    String?
+  recommendation String?
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+  remediations Remediation[]
+}
+
+model ChecklistItem {
+  id          Int      @id @default(autoincrement())
+  auditId     Int
+  category    String
+  framework   String   // eu_ai_act, nist_rmf, iso_42001, custom
+  question    String
+  status      String   @default("not_started") // not_started, compliant, partial, non_compliant, not_applicable
+  score       Float?
+  evidence    String?
+  notes       String?
+  aiSuggested Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model ComplianceCheck {
+  id          Int      @id @default(autoincrement())
+  auditId     Int
+  framework   String
+  requirement String
+  description String?
+  status      String   @default("pending") // pending, compliant, partial, non_compliant, not_applicable
+  evidence    String?
+  notes       String?
+  jurisdiction String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  audit       Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+model Remediation {
+  id          Int       @id @default(autoincrement())
+  auditId     Int?
+  findingId   Int?
+  title       String
+  description String?
+  priority    String    @default("medium") // critical, high, medium, low
+  status      String    @default("open") // open, in_progress, completed, verified, overdue
+  assignee    String?
+  dueDate     DateTime?
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  audit       Audit?    @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  finding     Finding?  @relation(fields: [findingId], references: [id], onDelete: SetNull)
+}
+
+model RiskRegister {
+  id            Int      @id @default(autoincrement())
+  title         String
+  description   String?
+  category      String   // bias, safety, privacy, security, reliability, transparency, accountability
+  likelihood    Int      // 1-5
+  impact        Int      // 1-5
+  riskScore     Float?
+  status        String   @default("identified") // identified, assessed, mitigated, accepted, closed
+  owner         String?
+  mitigationPlan String?
+  relatedAuditId Int?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Template {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  category    String   // audit, checklist, compliance, report, questionnaire
+  framework   String?
+  content     String   // JSON
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ===================== AI ANALYSIS (Feature 1) =====================
+
+model AiAnalysisResult {
+  id              Int      @id @default(autoincrement())
+  auditId         Int
+  analysisType    String   // auto_audit, bias_scan, risk_assessment, compliance_check
+  inputData       String   // text
+  aiOutput        String   // text
+  confidenceScore Float?
+  reviewedBy      String?
+  reviewStatus    String   @default("pending") // pending, approved, rejected, modified
+  createdAt       DateTime @default(now())
+
+  audit           Audit    @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+// ===================== REGULATORY INTELLIGENCE (Feature 2) =====================
+
+model RegulatoryUpdate {
+  id                 Int      @id @default(autoincrement())
+  country            String
+  region             String?
+  regulationName     String
+  description        String
+  effectiveDate      DateTime?
+  impactLevel        String   // critical, high, medium, low
+  affectedCategories String?  // JSON array
+  sourceUrl          String?
+  status             String   @default("proposed") // proposed, enacted, enforced, amended
+  createdAt          DateTime @default(now())
+
+  regulationImpacts  RegulationImpact[]
+}
+
+// ===================== SHADOW AI ASSETS (Feature 4) =====================
+
+model AiAsset {
+  id                Int       @id @default(autoincrement())
+  assetName         String
+  assetType         String    // llm, ml_model, ai_saas_tool, ai_agent, embedded_ai, custom_model
+  vendor            String?
+  department        String?
+  discoveredVia     String    @default("manual") // manual, scan, sso_log, network, browser
+  riskScore         Float?
+  governanceStatus  String    @default("unregistered") // authorized, restricted, monitored, blocked, unregistered
+  dataSensitivity   String?   // critical, high, medium, low
+  usersCount        Int       @default(0)
+  lastActivity      DateTime?
+  notes             String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  bomComponents     AiBomComponent[]
+  redTeamTests      RedTeamTest[]
+  monitoringAlerts  MonitoringAlert[]
+  dataLineage       DataLineage[]
+  incidents         Incident[]
+  aiAgents          AiAgent[]
+}
+
+model AiAssetScan {
+  id              Int      @id @default(autoincrement())
+  scanType        String
+  scanDate        DateTime @default(now())
+  toolsDiscovered Int      @default(0)
+  newTools        Int      @default(0)
+  riskAlerts      Int      @default(0)
+  scanStatus      String   @default("in_progress") // completed, in_progress, failed
+}
+
+// ===================== AI BOM (Feature 5) =====================
+
+model AiBomComponent {
+  id              Int       @id @default(autoincrement())
+  assetId         Int
+  componentName   String
+  componentType   String    // base_model, fine_tune_data, rag_source, tool_integration, guardrail, infrastructure, plugin, mcp_server
+  version         String?
+  vendor          String?
+  licenseType     String?
+  riskNotes       String?
+  lastUpdated     DateTime  @default(now())
+
+  asset           AiAsset   @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+// ===================== RED TEAM (Feature 6) =====================
+
+model RedTeamTest {
+  id              Int       @id @default(autoincrement())
+  auditId         Int?
+  assetId         Int?
+  testCategory    String    // prompt_injection, jailbreak, data_leakage, bias_elicitation, hallucination, toxicity, manipulation, xpia, custom
+  testName        String
+  testDescription String?
+  testPrompts     String?   // JSON array
+  results         String?   // JSON
+  passFail        String    @default("pending") // pass, fail, partial, error, pending
+  severity        String?   // critical, high, medium, low
+  runDate         DateTime  @default(now())
+  runBy           String?
+
+  audit           Audit?    @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  asset           AiAsset?  @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+// ===================== MONITORING (Feature 7) =====================
+
+model MonitoringAlert {
+  id              Int       @id @default(autoincrement())
+  auditId         Int?
+  assetId         Int?
+  alertType       String    // drift, bias_shift, performance_drop, compliance_change, security_incident, threshold_breach
+  severity        String    // critical, high, medium, low
+  description     String
+  metricName      String?
+  expectedValue   String?
+  actualValue     String?
+  threshold       String?
+  triggeredAt     DateTime  @default(now())
+  status          String    @default("active") // active, acknowledged, resolved, false_positive
+
+  audit           Audit?    @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  asset           AiAsset?  @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+// ===================== REGULATION IMPACTS (Feature 10) =====================
+
+model RegulationImpact {
+  id                      Int       @id @default(autoincrement())
+  regulationId            Int
+  auditId                 Int
+  impactType              String    // new_requirement, modified_requirement, removed_requirement
+  requirementDescription  String
+  currentStatus           String?
+  actionNeeded            String?
+  deadline                DateTime?
+  priority                String    @default("medium") // critical, high, medium, low
+
+  regulation              RegulatoryUpdate @relation(fields: [regulationId], references: [id], onDelete: Cascade)
+  audit                   Audit            @relation(fields: [auditId], references: [id], onDelete: Cascade)
+}
+
+// ===================== BENCHMARKS (Feature 13) =====================
+
+model BenchmarkData {
+  id            Int      @id @default(autoincrement())
+  industry      String
+  category      String
+  avgScore      Float
+  percentile25  Float?
+  percentile50  Float?
+  percentile75  Float?
+  sampleSize    Int      @default(0)
+  period        String
+  updatedAt     DateTime @default(now())
+}
+
+// ===================== AGENTIC AI (Feature 14) =====================
+
+model AiAgent {
+  id               Int       @id @default(autoincrement())
+  assetId          Int?
+  agentName        String
+  agentType        String    // task_agent, coding_agent, research_agent, customer_agent, decision_agent, multi_agent_system
+  description      String?
+  autonomyLevel    String    @default("human_in_loop") // human_in_loop, human_on_loop, human_out_of_loop, fully_autonomous
+  toolsAccess      String?   // JSON array
+  dataAccess       String?   // JSON array
+  riskScore        Float?
+  governanceStatus String    @default("provisional") // approved, provisional, restricted, blocked
+  owner            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  asset            AiAsset?  @relation(fields: [assetId], references: [id], onDelete: SetNull)
+  agentIncidents   AgentIncident[]
+}
+
+model AgentIncident {
+  id            Int       @id @default(autoincrement())
+  agentId       Int
+  incidentType  String    // unauthorized_action, data_leakage, hallucination, tool_misuse, policy_violation, prompt_injection, cascading_failure
+  severity      String    // critical, high, medium, low
+  description   String
+  rootCause     String?
+  resolution    String?
+  occurredAt    DateTime  @default(now())
+
+  agent         AiAgent   @relation(fields: [agentId], references: [id], onDelete: Cascade)
+}
+
+// ===================== DATA LINEAGE (Feature 17) =====================
+
+model DataLineage {
+  id              Int      @id @default(autoincrement())
+  assetId         Int
+  nodeName        String
+  nodeType        String   // source, processing, training, model, output, consumer
+  upstreamNodes   String?  // JSON array
+  downstreamNodes String?  // JSON array
+  dataTypes       String?
+  sensitivityLevel String? // critical, high, medium, low
+  consentStatus   String?
+  retentionPolicy String?
+
+  asset           AiAsset  @relation(fields: [assetId], references: [id], onDelete: Cascade)
+}
+
+// ===================== INCIDENTS (Feature 18) =====================
+
+model Incident {
+  id            Int       @id @default(autoincrement())
+  auditId       Int?
+  assetId       Int?
+  incidentType  String
+  severity      String    // critical, high, medium, low
+  description   String
+  playbookUsed  String?
+  status        String    @default("detected") // detected, triaging, responding, resolved, post_mortem
+  responders    String?   // JSON array
+  timeline      String?   // JSON array
+  rootCause     String?
+  lessonsLearned String?
+  reportedAt    DateTime  @default(now())
+  resolvedAt    DateTime?
+
+  audit         Audit?    @relation(fields: [auditId], references: [id], onDelete: SetNull)
+  asset         AiAsset?  @relation(fields: [assetId], references: [id], onDelete: SetNull)
+}
+
+// ===================== COLLABORATION (Feature 19) =====================
+
+model Comment {
+  id          Int      @id @default(autoincrement())
+  entityType  String   // audit, finding, checklist, compliance, remediation, agent
+  entityId    Int
+  auditId     Int?
+  author      String
+  content     String
+  mentions    String?  // JSON array
+  createdAt   DateTime @default(now())
+
+  audit       Audit?   @relation(fields: [auditId], references: [id], onDelete: SetNull)
+}
+
+model ApprovalWorkflow {
+  id          Int       @id @default(autoincrement())
+  entityType  String
+  entityId    Int
+  auditId     Int?
+  requestedBy String
+  approvedBy  String?
+  status      String    @default("pending") // pending, approved, rejected, escalated
+  notes       String?
+  requestedAt DateTime  @default(now())
+  resolvedAt  DateTime?
+
+  audit       Audit?    @relation(fields: [auditId], references: [id], onDelete: SetNull)
+}
+
+// ===================== NOTIFICATIONS (Feature 20) =====================
+
+model NotificationRule {
+  id            Int      @id @default(autoincrement())
+  triggerEvent  String   // new_finding, overdue_remediation, risk_threshold, compliance_change, regulation_deadline, escalation
+  conditions    String?  // JSON
+  recipients    String?  // JSON array
+  channel       String   @default("in_app") // in_app, email, slack, teams
+  frequency     String   @default("immediate") // immediate, daily_digest, weekly
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+}
+
+// ===================== MATURITY ASSESSMENT (Feature 21) =====================
+
+model MaturityAssessment {
+  id              Int      @id @default(autoincrement())
+  assessmentDate  DateTime @default(now())
+  dimension       String   // strategy_leadership, policies_processes, technology_tools, people_culture, monitoring_improvement
+  questionId      String
+  questionText    String
+  maturityLevel   Int      // 1-5
+  evidence        String?
+  overallScore    Float?
+  assessedBy      String?
+}
+
+// ===================== VENDOR RISK (Feature 22) =====================
+
+model VendorAssessment {
+  id                     Int       @id @default(autoincrement())
+  vendorName             String
+  vendorType             String    // ai_provider, saas_with_ai, consulting, data_provider
+  assessmentDate         DateTime  @default(now())
+  riskScore              Float?
+  complianceStatus       String?
+  contractExpiry         DateTime?
+  keyRisks               String?   // JSON array
+  questionnaireResponses String?   // JSON
+  assessor               String?
+}
+
+// ===================== INTEGRATIONS (Feature 25) =====================
+
+model Integration {
+  id              Int       @id @default(autoincrement())
+  integrationType String    // jira, servicenow, slack, teams, github, gitlab, aws, azure, gcp, webhook, api, siem, sso
+  config          String?   // JSON
+  status          String    @default("inactive") // active, inactive, error
+  lastSync        DateTime?
+  createdBy       String?
+  createdAt       DateTime  @default(now())
+}

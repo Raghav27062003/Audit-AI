@@ -1,0 +1,517 @@
+@import "tailwindcss";
+
+/* ============================================
+   AuditAI - Global Theme & Design System
+   Dark Enterprise Dashboard with Glassmorphism
+   ============================================ */
+
+@theme {
+  /* Core background colors */
+  --color-dark-bg: #0a0a1a;
+  --color-dark-sidebar: #0f0f2a;
+  --color-dark-card: rgba(15, 15, 42, 0.8);
+  --color-dark-surface: #111133;
+  --color-dark-elevated: #16163d;
+  --color-dark-border: rgba(139, 92, 246, 0.15);
+
+  /* Accent gradients - purple to blue spectrum */
+  --color-accent-purple: #8b5cf6;
+  --color-accent-blue: #3b82f6;
+  --color-accent-indigo: #6366f1;
+  --color-accent-violet: #7c3aed;
+  --color-accent-cyan: #06b6d4;
+
+  /* Risk severity colors */
+  --color-risk-critical: #ef4444;
+  --color-risk-high: #f97316;
+  --color-risk-medium: #f59e0b;
+  --color-risk-low: #10b981;
+  --color-risk-info: #3b82f6;
+
+  /* Status colors */
+  --color-status-compliant: #10b981;
+  --color-status-partial: #3b82f6;
+  --color-status-non-compliant: #ef4444;
+  --color-status-pending: #94a3b8;
+
+  /* Glassmorphism tokens */
+  --color-glass-bg: rgba(15, 15, 42, 0.6);
+  --color-glass-border: rgba(139, 92, 246, 0.12);
+  --color-glass-shadow: rgba(0, 0, 0, 0.4);
+
+  /* Spacing & sizing */
+  --sidebar-width-expanded: 280px;
+  --sidebar-width-collapsed: 72px;
+  --topbar-height: 64px;
+}
+
+/* ============================================
+   Base Layer Styles
+   ============================================ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-dark-bg);
+    color: #e2e8f0; /* slate-200 */
+    font-family:
+      "Inter",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: rgba(139, 92, 246, 0.3);
+    color: #f1f5f9;
+  }
+
+  /* Focus visible for accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-accent-purple);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+}
+
+/* ============================================
+   Glassmorphism Utilities
+   ============================================ */
+
+.glass-card {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow:
+    0 8px 32px var(--color-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  border-color: rgba(139, 92, 246, 0.25);
+  box-shadow:
+    0 12px 40px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.glass-card-static {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-glass-border);
+  box-shadow:
+    0 8px 32px var(--color-glass-shadow),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+  border-radius: 12px;
+}
+
+.glass-input {
+  background: rgba(15, 15, 42, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(139, 92, 246, 0.15);
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.glass-input:focus {
+  border-color: rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+  outline: none;
+}
+
+/* ============================================
+   Animated Score Gauge
+   ============================================ */
+
+@keyframes fillGauge {
+  from {
+    stroke-dashoffset: 283;
+  }
+  to {
+    stroke-dashoffset: var(--gauge-offset);
+  }
+}
+
+.gauge-ring {
+  animation: fillGauge 1.2s ease-out forwards;
+  transform-origin: center;
+  transform: rotate(-90deg);
+}
+
+@keyframes gaugeGlow {
+  0%,
+  100% {
+    filter: drop-shadow(0 0 4px var(--gauge-color));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px var(--gauge-color));
+  }
+}
+
+.gauge-glow {
+  animation: gaugeGlow 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Particle Background Animation
+   ============================================ */
+
+@keyframes floatParticle {
+  0%,
+  100% {
+    transform: translateY(0px) translateX(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.6;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  50% {
+    transform: translateY(-60px) translateX(30px);
+  }
+}
+
+.particle-bg {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.particle {
+  position: absolute;
+  width: 2px;
+  height: 2px;
+  background: rgba(139, 92, 246, 0.3);
+  border-radius: 50%;
+  animation: floatParticle var(--duration, 8s) ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* ============================================
+   Skeleton Loading Animation
+   ============================================ */
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 15, 42, 0.4) 25%,
+    rgba(139, 92, 246, 0.08) 50%,
+    rgba(15, 15, 42, 0.4) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ============================================
+   Custom Scrollbar
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(139, 92, 246, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 92, 246, 0.4);
+}
+
+/* Firefox scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.2) transparent;
+}
+
+/* ============================================
+   Gradient Risk Indicator Classes
+   ============================================ */
+
+.risk-gradient-critical {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+.risk-gradient-high {
+  background: linear-gradient(135deg, #f97316, #ea580c);
+}
+
+.risk-gradient-medium {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.risk-gradient-low {
+  background: linear-gradient(135deg, #10b981, #059669);
+}
+
+.risk-gradient-info {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+}
+
+/* Accent gradient utilities */
+.gradient-accent {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+}
+
+.gradient-accent-text {
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gradient-accent-border {
+  border-image: linear-gradient(135deg, #8b5cf6, #3b82f6) 1;
+}
+
+/* ============================================
+   Command Palette Overlay
+   ============================================ */
+
+.command-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 20vh;
+}
+
+.command-palette {
+  width: 100%;
+  max-width: 560px;
+  background: rgba(15, 15, 42, 0.95);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 16px;
+  box-shadow:
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(139, 92, 246, 0.08);
+  overflow: hidden;
+}
+
+.command-input {
+  width: 100%;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.12);
+  color: #f1f5f9;
+  font-size: 16px;
+  outline: none;
+}
+
+.command-input::placeholder {
+  color: #64748b;
+}
+
+.command-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.command-item:hover,
+.command-item[data-active="true"] {
+  background: rgba(139, 92, 246, 0.1);
+  color: #f1f5f9;
+}
+
+.command-item[data-active="true"] {
+  background: rgba(139, 92, 246, 0.15);
+}
+
+/* ============================================
+   Sidebar Styles
+   ============================================ */
+
+.sidebar {
+  background: var(--color-dark-sidebar);
+  border-right: 1px solid rgba(139, 92, 246, 0.1);
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  color: #94a3b8;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  position: relative;
+}
+
+.sidebar-item:hover {
+  background: rgba(139, 92, 246, 0.08);
+  color: #e2e8f0;
+}
+
+.sidebar-item.active {
+  background: rgba(139, 92, 246, 0.15);
+  color: #f1f5f9;
+  border-left: 2px solid #8b5cf6;
+}
+
+.sidebar-item.active .sidebar-icon {
+  color: #8b5cf6;
+}
+
+.sidebar-icon {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  transition: color 0.2s ease;
+}
+
+.sidebar-divider {
+  height: 1px;
+  background: rgba(139, 92, 246, 0.08);
+  margin: 8px 12px;
+}
+
+/* Tooltip for collapsed sidebar */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  padding: 4px 10px;
+  background: rgba(15, 15, 42, 0.95);
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  border-radius: 6px;
+  font-size: 12px;
+  color: #e2e8f0;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  z-index: 100;
+}
+
+.sidebar-item:hover .sidebar-tooltip {
+  opacity: 1;
+}
+
+/* ============================================
+   Additional Utility Animations
+   ============================================ */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 4px rgba(139, 92, 246, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* ============================================
+   Tab active indicator
+   ============================================ */
+
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  height: 2px;
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  border-radius: 1px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
