@@ -39,7 +39,7 @@ export default function IntegrationsPage() {
 
   useEffect(() => {
     fetch("/api/integrations")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setIntegrations(Array.isArray(data) ? data : []);
         setLoading(false);

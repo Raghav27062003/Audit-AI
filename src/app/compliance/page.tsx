@@ -92,7 +92,7 @@ export default function CompliancePage() {
 
   useEffect(() => {
     fetch("/api/compliance")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setChecks(Array.isArray(data) ? data : []);
         setLoading(false);

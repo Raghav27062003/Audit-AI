@@ -106,7 +106,7 @@ export default function VendorsPage() {
 
   useEffect(() => {
     fetch("/api/vendors")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setVendors(Array.isArray(data) ? data : []);
         setLoading(false);

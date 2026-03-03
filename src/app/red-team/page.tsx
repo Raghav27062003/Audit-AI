@@ -74,7 +74,7 @@ export default function RedTeamPage() {
 
   useEffect(() => {
     fetch("/api/red-team")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setTests(Array.isArray(data) ? data : []);
         setLoading(false);

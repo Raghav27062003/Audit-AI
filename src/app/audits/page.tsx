@@ -95,7 +95,7 @@ export default function AuditsPage() {
 
   useEffect(() => {
     fetch("/api/audits")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setAudits(Array.isArray(data) ? data : []);
         setLoading(false);

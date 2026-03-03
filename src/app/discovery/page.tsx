@@ -91,7 +91,7 @@ export default function DiscoveryPage() {
 
   useEffect(() => {
     fetch("/api/assets")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setAssets(Array.isArray(data) ? data : []);
         setLoading(false);

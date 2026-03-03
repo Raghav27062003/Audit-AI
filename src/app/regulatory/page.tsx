@@ -72,7 +72,7 @@ export default function RegulatoryPage() {
 
   useEffect(() => {
     fetch("/api/regulatory")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setUpdates(Array.isArray(data) ? data : []);
         setLoading(false);

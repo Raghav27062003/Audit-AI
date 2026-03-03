@@ -40,7 +40,7 @@ export default function MaturityPage() {
 
   useEffect(() => {
     fetch("/api/maturity")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setAssessments(Array.isArray(data) ? data : []);
         setLoading(false);

@@ -63,7 +63,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     fetch("/api/dashboard/stats")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setStats(data);
         setLoading(false);

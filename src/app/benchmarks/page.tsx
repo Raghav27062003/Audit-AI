@@ -92,7 +92,7 @@ export default function BenchmarksPage() {
 
   useEffect(() => {
     fetch("/api/benchmarks")
-      .then((res) => res.json())
+      .then((res) => { if (!res.ok) throw new Error(); return res.json(); })
       .then((data) => {
         setBenchmarks(Array.isArray(data) ? data : []);
         setLoading(false);
